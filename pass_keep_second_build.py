@@ -53,7 +53,7 @@ def read_all_passwords(): #Shows the user all their saved passwords
 def delete_all_files(): #This function removes everything if the master key file is not in the directory.
     all_files = os.listdir()
     for single_file in all_files:
-        if single_file == 'venv' or single_file.endswith('.py') or single_file == '.idea':
+        if single_file.endswith('.py'):
             pass
         else:
             os.remove(single_file)
