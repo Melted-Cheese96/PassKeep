@@ -1,3 +1,10 @@
+'''
+Changelog
+1:Changed the way that account information is stored. 
+2:Did a complete overhaul of the delete_all_files() function. Still a WIP
+
+'''
+
 import pickle
 import os
 from time import sleep
