@@ -1,5 +1,4 @@
 import tkinter as tk
-from time import sleep
 from passlib.hash import pbkdf2_sha256
 import sys
 import random
@@ -26,7 +25,6 @@ class PassKeep:
 
     def verify_password(self):  # Verifies the password that the user has entered
         entered_password = self.password_entry.get()
-
         with open('.cfg', 'rb') as doc:
             password_hash = pickle.load(doc)
 
@@ -49,8 +47,8 @@ class PassKeep:
         remove_account_button.grid(row=2)
         full_wipe_button = tk.Button(self.options_window, text='Remove all saved info', command=self.remove_all_passwords)
         full_wipe_button.grid(row=3)
-        #quit_button = tk.Button(self.options_window, text='Quit', command=self.quit_program)
-        #quit_button.grid(row=3)
+        quit_button = tk.Button(self.options_window, text='Quit', command=self.quit_program)
+        quit_button.grid(row=4)
 
     def remove_all_passwords(self):
         with open('.saved', 'r') as doc:
@@ -74,7 +72,7 @@ class PassKeep:
 
     def quit_program(self):
         self.log_in_screen.destroy()
-
+        sys.exit()
 
     def store_new_password_gui(self):  # Stores new account details
         self.options_window.withdraw()
@@ -120,13 +118,13 @@ class PassKeep:
 
             messagebox.showinfo('Success!', 'Account details for {} has been saved'.format(account))
             self.new_password_window.destroy()
-            self.options_window.deiconify()
 
             file_name = '{} key'.format(account)
             with open(file_name, 'wb') as doc:
                 pickle.dump(gen, doc)
 
     def read_password_gui(self):
+        self.options_window.withdraw()
         self.read_password_window = tk.Toplevel()
         account_label = tk.Label(self.read_password_window, text='Account:')
         account_label.grid(row=0)
@@ -142,6 +140,7 @@ class PassKeep:
         self.options_window.deiconify()
 
     def remove_account_gui(self):
+        self.options_window.withdraw()
         self.remove_account_window = tk.Toplevel()
         account_label = tk.Label(self.remove_account_window, text='Account:')
         account_label.grid(row=0)
@@ -159,7 +158,7 @@ class PassKeep:
     def remove_account(self):
         account_to_remove = self.account_entry.get().lower()
         if ' ' in account_to_remove:
-            account_to_remove = account_to_remove.replace(' ' , '')
+            account_to_remove = account_to_remove.replace(' ', '')
         account_to_remove = '.' + account_to_remove
         key_file = '{} key'.format(account_to_remove)
         words = []
@@ -178,30 +177,29 @@ class PassKeep:
             os.remove(account_to_remove)
             os.remove(key_file)
             messagebox.showinfo('Success!', '{} has been removed!'.format(account_to_remove))
-            self.remove_account_window.destroy()
-            self.options_window.deiconify()
         except FileNotFoundError:
             messagebox.showerror('Error', 'The account that you entered was not found!')
 
     def read_password(self):
-        all_files = os.listdir()
         account = '.' + self.account_entry.get().lower()
         if ' ' in account:
             account = account.replace(' ', '')
         account_key = '{} key'.format(account)
         print(account)
         print(account_key)
-        with open(account, 'rb') as doc:
-            encrypted_password = pickle.load(doc)
+        try:
+            with open(account, 'rb') as doc:
+                encrypted_password = pickle.load(doc)
 
-        with open(account_key, 'rb') as doc:
-            key = pickle.load(doc)
-        f = Fernet(key)
-        decrypted_password = f.decrypt(encrypted_password)
-        decrypted_password = decrypted_password.decode()
-        messagebox.showinfo('Result', 'Your password for {} is {}'.format(account, decrypted_password))
-        self.read_password_window.destroy()
-        self.options_window.deiconify()
+            with open(account_key, 'rb') as doc:
+                key = pickle.load(doc)
+
+            f = Fernet(key)
+            decrypted_password = f.decrypt(encrypted_password)
+            decrypted_password = decrypted_password.decode()
+            messagebox.showinfo('Result', 'Your password for {} is {}'.format(account, decrypted_password))
+        except FileNotFoundError:
+            messagebox.showerror('Error', '{} was not found!'.format(account))
 
     def check_for_setup_files(self):  # Checks for setup files
         all_files = os.listdir()
