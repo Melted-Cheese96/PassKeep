@@ -1,7 +1,6 @@
 import tkinter as tk
 from passlib.hash import pbkdf2_sha256
 import sys
-import random
 import os
 import pickle
 from cryptography.fernet import Fernet
@@ -20,8 +19,18 @@ class PassKeep:
         self.password_entry.grid(row=0, column=1)
         self.enter_button = tk.Button(text='Log in', command=self.verify_password)
         self.enter_button.grid(row=1, column=1)
+        self.state = tk.IntVar()
+        self.show_password_check_box = tk.Checkbutton(text='Show password', command=self.check_state, variable=self.state)
+        self.show_password_check_box.grid(row=1, sticky='E')
         self.check_for_setup_files()
         self.log_in_screen.mainloop()
+
+    def check_state(self):
+        state = self.state.get()
+        if state == 0:
+            self.password_entry.configure(show='*')
+        else:
+            self.password_entry.configure(show='')
 
     def verify_password(self):  # Verifies the password that the user has entered
         entered_password = self.password_entry.get()
@@ -89,6 +98,16 @@ class PassKeep:
         create_button.grid(row=2, column=1)
         back_button = tk.Button(self.new_password_window, text='Back', command=self.store_new_password_back_button)
         back_button.grid(row=2, column=0)
+        self.show_state = tk.IntVar()
+        self.chk_box = tk.Checkbutton(self.new_password_window, variable=self.show_state)
+        self.chk_box.grid(row=2, column=2)
+
+    def check_chk_box(self):
+        chk_box_state = self.show_state
+        if chk_box_state == 0:
+            self.new_password_entry.configure(show='')
+        else:
+            self.new_password_entry.configure(show='*')
 
     def store_new_password_back_button(self):
         self.new_password_window.destroy()
@@ -229,13 +248,27 @@ class PassKeep:
             self.new_window.title('Password creation - PassKeep')
             new_window_label = tk.Label(self.new_window, text='Create master password!')
             new_window_label.grid(row=0)
-            self.new_password_entry = tk.Entry(self.new_window)
-            self.new_password_entry.grid(row=0, column=1)
+            self.new_password_entry1 = tk.Entry(self.new_window, show='*')
+            self.new_password_entry1.grid(row=0, column=1)
             create_button = tk.Button(self.new_window, text='Create', command=self.create_master_password)
             create_button.grid(row=1, column=1)
+            self.master_state = tk.IntVar()
+            self.show_password_chk = tk.Checkbutton(self.new_window, text='Show password', variable=self.master_state,
+                                                    command=self.check_master_state)
+            self.show_password_chk.grid(row=1)
+
+    def check_master_state(self):
+        state = self.master_state.get()
+        print(state)
+        if state == 0:
+            print('Zero')
+            self.new_password_entry1.configure(show='*')
+        else:
+            print('One')
+            self.new_password_entry1.configure(show='')
 
     def create_master_password(self):  # Prompts user to create master password
-        master_password = self.new_password_entry.get()
+        master_password = self.new_password_entry1.get()
         if len(master_password) < 5:
             messagebox.showerror('Error', 'You cannot have a password that has less than 5 characters')
         else:
