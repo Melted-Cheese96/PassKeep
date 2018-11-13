@@ -7,26 +7,29 @@ from cryptography.fernet import Fernet
 from tkinter import messagebox
 
 
+
+
 class PassKeep:
 
     def __init__(self):  # Log in screen for PassKeep
         self.log_in_screen = tk.Tk()
         self.log_in_screen.title('PassKeep - Log In')
-        self.log_in_screen.configure(height=False, width=False)
+        self.log_in_screen.resizable(height=False, width=False)
         self.password_label = tk.Label(text='Password:')
         self.password_label.grid(row=0)
-        self.password_entry = tk.Entry()
+        self.password_entry = tk.Entry(show='*')
         self.password_entry.grid(row=0, column=1)
         self.enter_button = tk.Button(text='Log in', command=self.verify_password)
         self.enter_button.grid(row=1, column=1)
-        self.state = tk.IntVar()
-        self.show_password_check_box = tk.Checkbutton(text='Show password', command=self.check_state, variable=self.state)
-        self.show_password_check_box.grid(row=1, sticky='E')
+        self.log_in_state = tk.IntVar()
+        self.show_password_check_box_log_in_screen = tk.Checkbutton(text='Show password', variable=self.log_in_state, command=self.check_state)
+        self.show_password_check_box_log_in_screen.grid(row=1)
         self.check_for_setup_files()
         self.log_in_screen.mainloop()
 
     def check_state(self):
-        state = self.state.get()
+        state = self.log_in_state.get()
+        print(state)
         if state == 0:
             self.password_entry.configure(show='*')
         else:
@@ -47,6 +50,7 @@ class PassKeep:
     def options(self):  # Main Window
         self.log_in_screen.withdraw()
         self.options_window = tk.Toplevel()
+        self.options_window.resizable(height=False, width=False)
         self.options_window.title('PassKeep')
         enter_new_password_button = tk.Button(self.options_window, text='Add account', command=self.store_new_password_gui)
         enter_new_password_button.grid(row=0)
@@ -86,21 +90,24 @@ class PassKeep:
     def store_new_password_gui(self):  # Stores new account details
         self.options_window.withdraw()
         self.new_password_window = tk.Toplevel()
+        self.new_password_window.resizable(height=False, width=False)
+        #button_frame = tk.Frame(self.new_password_window)
+        #button_frame.grid(row=0)
         account_label = tk.Label(self.new_password_window, text='Account:')
         account_label.grid(row=0)
         self.account_entry = tk.Entry(self.new_password_window)
         self.account_entry.grid(row=0, column=1)
         new_password_label = tk.Label(self.new_password_window, text='Password:')
         new_password_label.grid(row=1)
-        self.new_password_entry = tk.Entry(self.new_password_window)
+        self.new_password_entry = tk.Entry(self.new_password_window, show='*')
         self.new_password_entry.grid(row=1, column=1)
         create_button = tk.Button(self.new_password_window, text='Store details', command=self.store_password)
         create_button.grid(row=2, column=1)
         back_button = tk.Button(self.new_password_window, text='Back', command=self.store_new_password_back_button)
         back_button.grid(row=2, column=0)
         self.show_state = tk.IntVar()
-        self.chk_box = tk.Checkbutton(self.new_password_window, variable=self.show_state)
-        self.chk_box.grid(row=2, column=2)
+        self.chk_box = tk.Checkbutton(self.new_password_window, text='Show password', variable=self.show_state)
+        self.chk_box.grid(row=3, column=1)
 
     def check_chk_box(self):
         chk_box_state = self.show_state
@@ -145,6 +152,7 @@ class PassKeep:
     def read_password_gui(self):
         self.options_window.withdraw()
         self.read_password_window = tk.Toplevel()
+        self.read_password_window.resizable(height=False, width=False)
         account_label = tk.Label(self.read_password_window, text='Account:')
         account_label.grid(row=0)
         self.account_entry = tk.Entry(self.read_password_window)
@@ -161,6 +169,7 @@ class PassKeep:
     def remove_account_gui(self):
         self.options_window.withdraw()
         self.remove_account_window = tk.Toplevel()
+        self.remove_account_window.resizable(height=False, width=False)
         account_label = tk.Label(self.remove_account_window, text='Account:')
         account_label.grid(row=0)
         self.account_entry = tk.Entry(self.remove_account_window)
@@ -241,10 +250,11 @@ class PassKeep:
                 pass
 
         if '.cfg' in all_files:
-            pass
+                pass
         else:
             self.log_in_screen.withdraw()
             self.new_window = tk.Toplevel()
+            self.new_window.resizable(height=False, width=False)
             self.new_window.title('Password creation - PassKeep')
             new_window_label = tk.Label(self.new_window, text='Create master password!')
             new_window_label.grid(row=0)
@@ -254,8 +264,10 @@ class PassKeep:
             create_button.grid(row=1, column=1)
             self.master_state = tk.IntVar()
             self.show_password_chk = tk.Checkbutton(self.new_window, text='Show password', variable=self.master_state,
-                                                    command=self.check_master_state)
+                                                          command=self.check_master_state)
             self.show_password_chk.grid(row=1)
+            #self.new_window.grid_columnconfigure(0, weight=0)
+            self.new_window.mainloop()
 
     def check_master_state(self):
         state = self.master_state.get()
