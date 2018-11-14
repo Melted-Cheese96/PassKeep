@@ -7,7 +7,7 @@ from cryptography.fernet import Fernet
 from tkinter import messagebox
 
 
-
+#TODO LIST: Add username entry to the save account menu
 
 class PassKeep:
 
@@ -97,24 +97,29 @@ class PassKeep:
         account_label.grid(row=0)
         self.account_entry = tk.Entry(self.new_password_window)
         self.account_entry.grid(row=0, column=1)
+        self.username_label = tk.Label(self.new_password_window, text='Username:')
+        self.username_label.grid(row=1)
+        self.username_entry = tk.Entry(self.new_password_window)
+        self.username_entry.grid(row=1, column=1)
         new_password_label = tk.Label(self.new_password_window, text='Password:')
-        new_password_label.grid(row=1)
+        new_password_label.grid(row=2)
+        
         self.new_password_entry = tk.Entry(self.new_password_window, show='*')
-        self.new_password_entry.grid(row=1, column=1)
+        self.new_password_entry.grid(row=2, column=1)
         create_button = tk.Button(self.new_password_window, text='Store details', command=self.store_password)
-        create_button.grid(row=2, column=1)
+        create_button.grid(row=3, column=1)
         back_button = tk.Button(self.new_password_window, text='Back', command=self.store_new_password_back_button)
-        back_button.grid(row=2, column=0)
+        back_button.grid(row=3, column=0)
         self.show_state = tk.IntVar()
         self.chk_box = tk.Checkbutton(self.new_password_window, text='Show password', variable=self.show_state)
-        self.chk_box.grid(row=3, column=1)
+        self.chk_box.grid(row=4, column=1)
 
     def check_chk_box(self):
-        chk_box_state = self.show_state
+        chk_box_state = self.show_state.get()
         if chk_box_state == 0:
-            self.new_password_entry.configure(show='')
-        else:
             self.new_password_entry.configure(show='*')
+        else:
+            self.new_password_entry.configure(show='')
 
     def store_new_password_back_button(self):
         self.new_password_window.destroy()
@@ -123,31 +128,35 @@ class PassKeep:
     def store_password(self):  # Stores the password that has been entered in self.new_password_window()
         all_files = os.listdir()
         account = '.' + self.account_entry.get().lower()
+        username = self.username_entry.get().lower()
+        print(username)
         if ' ' in account:
             account = account.replace(' ', '')
             print(account)
         if account in all_files:
             messagebox.showerror('Error', 'You have already saved a password for that account!')
-        password = self.new_password_entry.get()
-        if len(password) < 3:
-            messagebox.showerror('Error', 'Your password cannot be less than 3 letters')
         else:
-            gen = Fernet.generate_key()
-            f = Fernet(gen)
-            password = f.encrypt(str.encode(password))
-            doc = open('.saved', 'a')
-            doc.write(account)
-            doc.write('\n')
-            doc.close()
-            with open(account, 'wb') as doc:
-                pickle.dump(password, doc)
+            password = self.new_password_entry.get()
+            if len(password) < 3:
+                messagebox.showerror('Error', 'Your password cannot be less than 3 letters')
+            else:
+                gen = Fernet.generate_key()
+                f = Fernet(gen)
+                password = f.encrypt(str.encode(password))
+                doc = open('.saved', 'a')
+                doc.write(account)
+                doc.write('\n')
+                doc.close()
+                with open(account, 'wb') as doc:
+                    pickle.dump(password, doc)
 
-            messagebox.showinfo('Success!', 'Account details for {} has been saved'.format(account))
-            self.new_password_window.destroy()
+                messagebox.showinfo('Success!', 'Account details for {} has been saved'.format(account))
 
-            file_name = '{} key'.format(account)
-            with open(file_name, 'wb') as doc:
-                pickle.dump(gen, doc)
+                file_name = '{} key'.format(account)
+                with open(file_name, 'wb') as doc:
+                    pickle.dump(gen, doc)
+            self.new_password_window.deiconify()
+                
 
     def read_password_gui(self):
         self.options_window.withdraw()
