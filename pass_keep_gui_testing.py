@@ -45,6 +45,7 @@ class PassKeep:
             self.options()
         else:
             messagebox.showerror('Error', 'You did not enter the correct password')
+            self.password_entry.delete(0, 'end')
 
     def options(self):  # Main Window
         self.log_in_screen.withdraw()
@@ -96,6 +97,7 @@ class PassKeep:
     def store_new_password_gui(self):  # Stores new account details
         self.options_window.withdraw()
         self.new_password_window = tk.Toplevel()
+        self.new_password_window.title('PassKeep')
         self.new_password_window.resizable(height=False, width=False)
         # button_frame = tk.Frame(self.new_password_window)
         # button_frame.grid(row=0)
@@ -177,11 +179,15 @@ class PassKeep:
 
             os.chdir(current_dir)
             print(os.getcwd())
-            self.new_password_window.deiconify()
+            self.account_entry.delete(0, 'end')
+            self.username_entry.delete(0, 'end')
+            self.new_password_entry.delete(0, 'end')
+
 
     def read_password_gui(self):  # Setup widgets for the read_password_gui()
         self.options_window.withdraw()
         self.read_password_window = tk.Toplevel()
+        self.read_password_window.title('PassKeep')
         self.read_password_window.resizable(height=False, width=False)
         account_label = tk.Label(self.read_password_window, text='Account:')
         account_label.grid(row=0)
@@ -216,32 +222,37 @@ class PassKeep:
     def remove_account(self):  # Removes the account that the user specified in the GUI entry box
         all_files = os.listdir()
         account_to_remove = self.account_entry.get().lower()
-        if ' ' in account_to_remove:
-            account_to_remove = account_to_remove.replace(' ', '')
-        account_to_remove = '.' + account_to_remove
-        words = []
-        try:
-            with open('.saved', 'r') as doc:
-                for line in doc:
-                    for word in line.split():
-                        if word == account_to_remove:
-                            print('Account to remove found in .saved!')
-                            print(word)
-                        else:
-                            words.append(word)
+        if account_to_remove == '.cfg' or account_to_remove == '.saved':
+            messagebox.showerror('Nice try', 'Nice try')
+        else:
+            if ' ' in account_to_remove:
+                account_to_remove = account_to_remove.replace(' ', '')
+            account_to_remove = '.' + account_to_remove
+            words = []
+            try:
+                with open('.saved', 'r') as doc:
+                    for line in doc:
+                        for word in line.split():
+                            if word == account_to_remove:
+                                print('Account to remove found in .saved!')
+                                print(word)
+                            else:
+                                words.append(word)
 
-            with open('.saved', 'w') as doc:
-                for item in words:
-                    doc.write(item)
-            current_dir = os.getcwd()
-            if account_to_remove in all_files:
-                print('Here')
-                os.system('rm -rf {}'.format(account_to_remove))
-                messagebox.showinfo('Success!', '{} has been removed!'.format(account_to_remove))
-            else:
-                messagebox.showerror('Error', 'That account was not found!')
-        except FileNotFoundError:
-            messagebox.showerror('Error', 'The account that you entered was not found!')
+                with open('.saved', 'w') as doc:
+                    for item in words:
+                        doc.write(item)
+                current_dir = os.getcwd()
+                if account_to_remove in all_files:
+                    print('Here')
+                    os.system('rm -rf {}'.format(account_to_remove))
+                    messagebox.showinfo('Success!', '{} has been removed!'.format(account_to_remove))
+                else:
+                    messagebox.showerror('Error', 'That account was not found!')
+            except FileNotFoundError:
+                messagebox.showerror('Error', 'The account that you entered was not found!')
+
+            self.account_entry.delete(0, 'end')
 
     def read_password(self):  # responsible for reading saved accounts
         to_decrypt = []
@@ -268,16 +279,21 @@ class PassKeep:
                 decrypted_username = decrypted_username.decode()
                 decrypted_password = f.decrypt(encrypted_password)
                 decrypted_password = decrypted_password.decode()
-                messagebox.showinfo('Result', 'Your username is {}, your password is {}'.format(decrypted_username,
-                                                                                                decrypted_password))
+                account = account.strip('.')
+                messagebox.showinfo('Result', 'Your username for {} is {}, your password is {}'.format(
+                                                                                                    account,
+                                                                                                    decrypted_username,
+                                                                                                    decrypted_password))
             else:
                 decrypted_password = f.decrypt(encrypted_password)
                 decrypted_password = decrypted_password.decode()
                 messagebox.showinfo('Result', 'Your password is {}'.format(decrypted_password))
 
+            self.account_entry.delete(0, 'end')
 
-        except FileNotFoundError:
-            messagebox.showerror('Error', '{} was not found!'.format(account))
+        except Exception as e: # The only exceptions that can really happen here are NotADirectoryError or FileNotFound
+            messagebox.showerror('Error', '{} was not found or could not be opened'.format(account))
+            self.account_entry.delete(0, 'end')
         os.chdir(current_directory)
 
     def check_for_setup_files(self):  # Checks for setup files on startup
