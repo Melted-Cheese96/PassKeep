@@ -7,26 +7,37 @@ import string
 import random
 from cryptography.fernet import Fernet
 
-def save_pass(user_password, file_name):  # This saves a regular password
+current_dir = os.getcwd()
+
+def save_pass(username, user_password, file_name):  # This saves a regular password
+    
     if '.' in file_name:
+        print('Here1')
         pass
     else:
+        print('Here2')
         file_name = '.' + file_name
+    key = Fernet.generate_key()
+    f = Fernet(key)
+    encrypted_username = f.encrypt(str.encode(username))
+    encrypted_password = f.encrypt(str.encode(user_password))
 
-    gen = Fernet.generate_key()
-    key = Fernet(gen)
-    user_password = str.encode(user_password)
-    user_password = key.encrypt(user_password)
-
-
+    doc = open('.saved', 'a')
+    doc.write(file_name)
+    doc.write('\n')
+    doc.close()
+    os.chdir(file_name)
+    with open('.username', 'wb') as doc:
+        pickle.dump(encrypted_username, doc)
+    
     with open(file_name, 'wb') as doc:
-        pickle.dump(user_password, doc)
+        pickle.dump(encrypted_password, doc)
 
     file_name = '{} key'.format(file_name)
     with open(file_name, 'wb') as doc:
-        pickle.dump(gen, doc)
-
-
+        pickle.dump(key, doc)
+    os.chdir(current_dir)
+        
 def save_master_pass(password):  # This saves the master password
     with open('.cfg', 'wb') as doc:
         pickle.dump(password, doc)
@@ -48,7 +59,7 @@ def verify_password(entered_password):  # Verifies if the master password is equ
     doc = open('.cfg', 'rb')
     content = pickle.load(doc)
     verification = pbkdf2_sha256.verify(entered_password, content)
-    if verification == True:
+    if verification:
         print('That was the correct password!')
         print('')
         print('Bringing you to main menu')
@@ -59,16 +70,13 @@ def verify_password(entered_password):  # Verifies if the master password is equ
         print('That was the wrong password!')
         sys.exit()
 
-
 def delete_everything():  # Does a full wipe of everything in the directory
     try:
         with open('.saved', 'r') as doc:
             for line in doc:
                 for word in line.split():
                     print(word)
-                    key_file_name = '{} key'.format(word)
-                    os.remove(word)
-                    os.remove(key_file_name)
+                    os.system('rm -rf {}'.format(word))
 
     except FileNotFoundError:
         pass
@@ -102,8 +110,8 @@ def read_password():
     if ' ' in account:
         account = account.replace(' ', '')
     account = '.' + account
-    print(account)
     try:
+        os.chdir(account)
         with open(account, 'rb') as doc:
             encrypted_password = pickle.load(doc)
         print(encrypted_password)
@@ -114,16 +122,15 @@ def read_password():
         decrypted_password = f.decrypt(encrypted_password)
         decrypted_password = decrypted_password.decode()
         print('Your password for {} is {}'.format(account, decrypted_password))
-    except FileNotFoundError:
-        print('That account was not found!')
-
+    except Exception as e:
+        print('That account was either not found or you did not enter a valid directory')
+    os.chdir(current_dir)
+    
 def delete_all_files():  # This function removes everything if the master key file is not in the directory.
     with open('.saved', 'r') as doc:
         for line in doc:
             for word in line.split():
-                os.remove(word)
-                key = '{} key'.format(word)
-                os.remove(key)
+                os.system('rm -rf {}'.format(word))
     os.remove('.saved')
 
 
@@ -133,26 +140,14 @@ def add_password():  # Lets the user add passwords
     account = input('Enter what this password is going to be used for!').lower()
     if ' ' in account:
         account = account.replace(' ', '')
-        print(account)
-    account = '.' + account
-    if account in all_files:
-        print('You already have that account saved!')
-        main()
-    generate_pword = input('Do you want to generate a password?').lower()
-    if generate_pword in ['yes', 'y']:
-        password = generate_password()
-        print('The password for this account is {}'.format(password))
-    elif generate_pword in ['no', 'n']:
-        password = input('Enter password')
-    else:
-        print('Invalid command entered')
-        add_password()
-    new_password[account] = password
-    save_pass(password, account)
-    with open('.saved', 'a') as doc:
-        doc.write('{}'.format(account))
-        doc.write(' ')
-        print(doc)
+    new_path = '.' + account
+    os.mkdir(new_path)
+    #os.chdir(account)
+    username = input('Enter username for {}: '.format(account))    
+    print('\n')
+    password = input('Enter password!: ')
+    print('\n')
+    save_pass(username, password, account)
     print('Your new password has been saved \n')
     print('Returning...')
     sleep(2)
@@ -181,9 +176,7 @@ def delete_password():  # This function is called when the user presses 3 in mai
                 doc.write(item)
                 doc.write('')
                 doc.write(' ')
-        os.remove(account_to_delete)
-        key = '{} key'.format(account_to_delete)
-        os.remove(key)
+        os.system('rm -rf {}'.format(account_to_delete))
         print('Account details for {} has been deleted'.format(account_to_delete))
     else:
         print('That account was not found!')
