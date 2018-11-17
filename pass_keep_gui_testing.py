@@ -5,6 +5,9 @@ import os
 import pickle
 from cryptography.fernet import Fernet
 from tkinter import messagebox
+import string
+import random
+import pyperclip
 
 
 class PassKeep:
@@ -120,9 +123,28 @@ class PassKeep:
         self.show_state = tk.IntVar()
         self.chk_box = tk.Checkbutton(self.new_password_window, text='Show password', variable=self.show_state,
                                       command=self.check_chk_box)
-        self.chk_box.grid(row=4, column=1)
+        self.chk_box.grid(row=5, column=1)
+        generate_password_button = tk.Button(self.new_password_window, text='Generate password', command=self.generate_password)
+        generate_password_button.grid(row=4, column=1)
 
-    def check_chk_box(self):  # Controls the check box located in store_new_passoword_gui()
+    def generate_password(self):
+        alphabet = string.ascii_lowercase
+        numbers = [x for x in range(21)]
+        generated_password = ''
+        print(numbers)
+        for x in range(0, 24):
+            generated_password += random.choice(alphabet)
+            generated_password += str(random.choice(numbers))
+
+        prompt = messagebox.askyesno('Copy?', 'Do you want to copy the new password to your clipboard?')
+        if prompt == True:
+            pyperclip.copy(generated_password)
+        else:
+            pass
+
+        self.new_password_entry.insert(0, generated_password)
+
+    def check_chk_box(self):  # Controls the check box located in store_new_password_gui()
         chk_box_state = self.show_state.get()
         if chk_box_state == 0:
             self.new_password_entry.configure(show='*')
@@ -182,7 +204,6 @@ class PassKeep:
             self.account_entry.delete(0, 'end')
             self.username_entry.delete(0, 'end')
             self.new_password_entry.delete(0, 'end')
-
 
     def read_password_gui(self):  # Setup widgets for the read_password_gui()
         self.options_window.withdraw()
