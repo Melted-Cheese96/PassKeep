@@ -20,12 +20,13 @@ class PassKeep:
         self.enter_button = tk.Button(text='Log in', command=self.verify_password)
         self.enter_button.grid(row=1, column=1)
         self.log_in_state = tk.IntVar()
-        self.show_password_check_box_log_in_screen = tk.Checkbutton(text='Show password', variable=self.log_in_state, command=self.check_state)
+        self.show_password_check_box_log_in_screen = tk.Checkbutton(text='Show password', variable=self.log_in_state,
+                                                                    command=self.check_state)
         self.show_password_check_box_log_in_screen.grid(row=1)
         self.check_for_setup_files()
         self.log_in_screen.mainloop()
 
-    def check_state(self): # Checks the state of self.log_in_state checkbox.
+    def check_state(self):  # Checks the state of self.log_in_state checkbox.
         state = self.log_in_state.get()
         print(state)
         if state == 0:
@@ -44,21 +45,27 @@ class PassKeep:
             self.options()
         else:
             messagebox.showerror('Error', 'You did not enter the correct password')
+            self.password_entry.delete(0, 'end')
 
     def options(self):  # Main Window
         self.log_in_screen.withdraw()
         self.options_window = tk.Toplevel()
         self.options_window.resizable(height=False, width=False)
         self.options_window.title('PassKeep')
-        enter_new_password_button = tk.Button(self.options_window, text='Add account', command=self.store_new_password_gui)
+        enter_new_password_button = tk.Button(self.options_window, text='Add account',
+                                              command=self.store_new_password_gui)
         enter_new_password_button.grid(row=0)
-        read_password_button = tk.Button(self.options_window, text='Retrieve password', command=self.read_password_gui)
+        read_password_button = tk.Button(self.options_window, text='Retrieve account details ',
+                                         command=self.read_password_gui)
         read_password_button.grid(row=1)
-        remove_account_button = tk.Button(self.options_window, text='Remove account', command=self.remove_account_gui)
+        remove_account_button = tk.Button(self.options_window, text='Remove account',
+                                          command=self.remove_account_gui)
         remove_account_button.grid(row=2)
-        full_wipe_button = tk.Button(self.options_window, text='Remove all saved info', command=self.remove_all_passwords)
+        full_wipe_button = tk.Button(self.options_window, text='Remove all saved info',
+                                     command=self.remove_all_passwords)
         full_wipe_button.grid(row=3)
-        quit_button = tk.Button(self.options_window, text='Quit', command=self.quit_program)
+        quit_button = tk.Button(self.options_window, text='Quit',
+                                command=self.quit_program)
         quit_button.grid(row=4)
 
     def remove_all_passwords(self):
@@ -67,8 +74,8 @@ class PassKeep:
                 for word in line.split():
                     try:
                         print(word)
-                        #key_file = '{} key'.format(word)
-                        #os.remove(key_file)
+                        # key_file = '{} key'.format(word)
+                        # os.remove(key_file)
                         print(word)
                         os.system('rm -rf {}'.format(word))
 
@@ -90,9 +97,10 @@ class PassKeep:
     def store_new_password_gui(self):  # Stores new account details
         self.options_window.withdraw()
         self.new_password_window = tk.Toplevel()
+        self.new_password_window.title('PassKeep')
         self.new_password_window.resizable(height=False, width=False)
-        #button_frame = tk.Frame(self.new_password_window)
-        #button_frame.grid(row=0)
+        # button_frame = tk.Frame(self.new_password_window)
+        # button_frame.grid(row=0)
         account_label = tk.Label(self.new_password_window, text='Account:')
         account_label.grid(row=0)
         self.account_entry = tk.Entry(self.new_password_window)
@@ -110,17 +118,18 @@ class PassKeep:
         back_button = tk.Button(self.new_password_window, text='Back', command=self.store_new_password_back_button)
         back_button.grid(row=3, column=0)
         self.show_state = tk.IntVar()
-        self.chk_box = tk.Checkbutton(self.new_password_window, text='Show password', variable=self.show_state, command=self.check_chk_box)
+        self.chk_box = tk.Checkbutton(self.new_password_window, text='Show password', variable=self.show_state,
+                                      command=self.check_chk_box)
         self.chk_box.grid(row=4, column=1)
 
-    def check_chk_box(self): #Controls the check box located in store_new_passoword_gui()
+    def check_chk_box(self):  # Controls the check box located in store_new_passoword_gui()
         chk_box_state = self.show_state.get()
         if chk_box_state == 0:
             self.new_password_entry.configure(show='*')
         elif chk_box_state == 1:
             self.new_password_entry.configure(show='')
 
-    def store_new_password_back_button(self): #Controls the back button for the 'store_new_password_gui()'
+    def store_new_password_back_button(self):  # Controls the back button for the 'store_new_password_gui()'
         self.new_password_window.destroy()
         self.options_window.deiconify()
 
@@ -129,9 +138,10 @@ class PassKeep:
         current_dir = os.getcwd()
         account = '.' + self.account_entry.get().lower()
         username = self.username_entry.get().lower()
-        if ' ' in username:
-            username = username.replace(' ', '')
-            print(username)
+        print(username)
+        #if ' ' in username:
+         #   username = username.replace(' ', '')
+          #  print(username)
         if ' ' in account:
             account = account.replace(' ', '')
             print(account)
@@ -147,6 +157,7 @@ class PassKeep:
                 password = f.encrypt(str.encode(password))
                 username = f.encrypt(str.encode(username))
                 doc = open('.saved', 'a')
+                doc.write('\n')
                 doc.write(account)
                 doc.write('\n')
                 doc.close()
@@ -161,15 +172,21 @@ class PassKeep:
                 file_name = '{} key'.format(account)
                 with open(file_name, 'wb') as doc:
                     pickle.dump(gen, doc)
-                    
+
+                if len(username) > 2:
+                    with open('username', 'wb') as doc1:
+                        pickle.dump(username, doc1)
+
             os.chdir(current_dir)
             print(os.getcwd())
-            self.new_password_window.deiconify()
-                
+            self.account_entry.delete(0, 'end')
+            self.username_entry.delete(0, 'end')
+            self.new_password_entry.delete(0, 'end')
 
-    def read_password_gui(self): #Setup widgets for the read_password_gui()
+    def read_password_gui(self):  # Setup widgets for the read_password_gui()
         self.options_window.withdraw()
         self.read_password_window = tk.Toplevel()
+        self.read_password_window.title('PassKeep')
         self.read_password_window.resizable(height=False, width=False)
         account_label = tk.Label(self.read_password_window, text='Account:')
         account_label.grid(row=0)
@@ -180,11 +197,11 @@ class PassKeep:
         back_button = tk.Button(self.read_password_window, text='Back', command=self.read_password_back_button)
         back_button.grid(row=1)
 
-    def read_password_back_button(self): # Controls the back button for read_password_gui()
+    def read_password_back_button(self):  # Controls the back button for read_password_gui()
         self.read_password_window.destroy()
         self.options_window.deiconify()
 
-    def remove_account_gui(self): # Frontend for removing account
+    def remove_account_gui(self):  # Interface for removing accounts
         self.options_window.withdraw()
         self.remove_account_window = tk.Toplevel()
         self.remove_account_window.resizable(height=False, width=False)
@@ -197,36 +214,47 @@ class PassKeep:
         back_button = tk.Button(self.remove_account_window, text='Back', command=self.remove_window_back_button)
         back_button.grid(row=1)
 
-    def remove_window_back_button(self): # Back button for remove_window_back_button()
+    def remove_window_back_button(self):  # Back button for remove_window_back_button()
         self.remove_account_window.destroy()
         self.options_window.deiconify()
 
-    def remove_account(self): # Backend remove_account()
+    def remove_account(self):  # Removes the account that the user specified in the GUI entry box
+        all_files = os.listdir()
         account_to_remove = self.account_entry.get().lower()
-        if ' ' in account_to_remove:
-            account_to_remove = account_to_remove.replace(' ', '')
-        account_to_remove = '.' + account_to_remove
-        key_file = '{} key'.format(account_to_remove)
-        words = []
-        try:
-            with open('.saved', 'r') as doc:
-                for line in doc:
-                    for word in line.split():
-                        if word == account_to_remove:
-                            pass
-                        else:
-                            words.append(word)
-                            
-            with open('.saved', 'w') as doc:
-                for item in words:
-                    doc.write(item)
+        if account_to_remove == '.cfg' or account_to_remove == '.saved':
+            messagebox.showerror('Nice try', 'Nice try')
+        else:
+            if ' ' in account_to_remove:
+                account_to_remove = account_to_remove.replace(' ', '')
+            account_to_remove = '.' + account_to_remove
+            words = []
+            try:
+                with open('.saved', 'r') as doc:
+                    for line in doc:
+                        for word in line.split():
+                            if word == account_to_remove:
+                                print('Account to remove found in .saved!')
+                                print(word)
+                            else:
+                                words.append(word)
 
-            os.system('rm -rf {}'.format(account_to_remove))
-            messagebox.showinfo('Success!', '{} has been removed!'.format(account_to_remove))
-        except FileNotFoundError:
-            messagebox.showerror('Error', 'The account that you entered was not found!')
+                with open('.saved', 'w') as doc:
+                    for item in words:
+                        doc.write(item)
+                current_dir = os.getcwd()
+                if account_to_remove in all_files:
+                    print('Here')
+                    os.system('rm -rf {}'.format(account_to_remove))
+                    messagebox.showinfo('Success!', '{} has been removed!'.format(account_to_remove))
+                else:
+                    messagebox.showerror('Error', 'That account was not found!')
+            except FileNotFoundError:
+                messagebox.showerror('Error', 'The account that you entered was not found!')
 
-    def read_password(self): # Backend responsible for reading saved accounts
+            self.account_entry.delete(0, 'end')
+
+    def read_password(self):  # responsible for reading saved accounts
+        to_decrypt = []
         current_directory = os.getcwd()
         account = '.' + self.account_entry.get().lower()
         if ' ' in account:
@@ -234,19 +262,37 @@ class PassKeep:
         account_key = '{} key'.format(account)
         try:
             os.chdir(account)
+            all_files = os.listdir()
+            with open(account_key, 'rb') as doc2:  # Gets the fernet key to decrypt the encrypted information
+                key = pickle.load(doc2)
+            f = Fernet(key)
+
             with open(account, 'rb') as doc:
                 encrypted_password = pickle.load(doc)
-                
 
-            with open(account_key, 'rb') as doc:
-                key = pickle.load(doc)
+            if 'username' in all_files:
+                with open('username', 'rb') as doc1:
+                    encrypted_username = pickle.load(doc1)
 
-            f = Fernet(key)
-            decrypted_password = f.decrypt(encrypted_password)
-            decrypted_password = decrypted_password.decode()
-            messagebox.showinfo('Result', 'Your password for {} is {}'.format(account, decrypted_password))
-        except FileNotFoundError:
-            messagebox.showerror('Error', '{} was not found!'.format(account))
+                decrypted_username = f.decrypt(encrypted_username)
+                decrypted_username = decrypted_username.decode()
+                decrypted_password = f.decrypt(encrypted_password)
+                decrypted_password = decrypted_password.decode()
+                account = account.strip('.')
+                messagebox.showinfo('Result', 'Your username for {} is {}, your password is {}'.format(
+                                                                                                    account,
+                                                                                                    decrypted_username,
+                                                                                                    decrypted_password))
+            else:
+                decrypted_password = f.decrypt(encrypted_password)
+                decrypted_password = decrypted_password.decode()
+                messagebox.showinfo('Result', 'Your password is {}'.format(decrypted_password))
+
+            self.account_entry.delete(0, 'end')
+
+        except Exception as e: # The only exceptions that can really happen here are NotADirectoryError or FileNotFound
+            messagebox.showerror('Error', '{} was not found or could not be opened'.format(account))
+            self.account_entry.delete(0, 'end')
         os.chdir(current_directory)
 
     def check_for_setup_files(self):  # Checks for setup files on startup
@@ -260,8 +306,8 @@ class PassKeep:
                         for word in line.split():
                             try:
                                 os.system('rm -rf {}'.format(word))
-                                #key = '{} key'.format(word)
-                                #os.remove(key)
+                                # key = '{} key'.format(word)
+                                # os.remove(key)
                             except FileNotFoundError:
                                 pass
                 os.remove('.saved')
@@ -270,7 +316,7 @@ class PassKeep:
                 pass
 
         if '.cfg' in all_files:
-                pass
+            pass
         else:
             self.log_in_screen.withdraw()
             self.new_window = tk.Toplevel()
@@ -284,12 +330,12 @@ class PassKeep:
             create_button.grid(row=1, column=1)
             self.master_state = tk.IntVar()
             self.show_password_chk = tk.Checkbutton(self.new_window, text='Show password', variable=self.master_state,
-                                                          command=self.check_master_state)
+                                                    command=self.check_master_state)
             self.show_password_chk.grid(row=1)
-            #self.new_window.grid_columnconfigure(0, weight=0)
+            # self.new_window.grid_columnconfigure(0, weight=0)
             self.new_window.mainloop()
 
-    def check_master_state(self): #Checks the checkbutton in check_for_setup_files()
+    def check_master_state(self):  # Checks the checkbutton in check_for_setup_files()
         state = self.master_state.get()
         print(state)
         if state == 0:
@@ -299,7 +345,8 @@ class PassKeep:
             print('One')
             self.new_password_entry1.configure(show='')
 
-    def create_master_password(self):  # Prompts user to create master password if '.cfg' is not found in user's current directory.
+    def create_master_password(
+            self):  # Prompts user to create master password if '.cfg' is not found in user's current directory.
         master_password = self.new_password_entry1.get()
         if len(master_password) < 5:
             messagebox.showerror('Error', 'You cannot have a password that has less than 5 characters')
@@ -307,11 +354,10 @@ class PassKeep:
             master_password_hash = pbkdf2_sha256.hash(master_password)
             with open('.cfg', 'wb') as doc:
                 pickle.dump(master_password_hash, doc)
-                messagebox.showinfo('Success!', 'You have created a new master password, make sure that you remember it')
+                messagebox.showinfo('Success!',
+                                    'You have created a new master password, make sure that you remember it')
                 self.new_window.destroy()
                 self.log_in_screen.deiconify()
 
 
-
-
-PassKeep = PassKeep() #Initializes PassKeep class.
+PassKeep = PassKeep()  # Initializes PassKeep class.
