@@ -5,6 +5,9 @@ import os
 import pickle
 from cryptography.fernet import Fernet
 from tkinter import messagebox
+import string
+import random
+import pyperclip
 
 
 class PassKeep:
@@ -20,20 +23,24 @@ class PassKeep:
         self.enter_button = tk.Button(text='Log in', command=self.verify_password)
         self.enter_button.grid(row=1, column=1)
         self.log_in_state = tk.IntVar()
-        self.show_password_check_box_log_in_screen = tk.Checkbutton(text='Show password', variable=self.log_in_state,
-                                                                    command=self.check_state)
-        self.show_password_check_box_log_in_screen.grid(row=1)
+        self.show_password_button = tk.Checkbutton(text='Show password', variable=self.log_in_state,
+                                                                    command= lambda: self.check_state(self.password_entry, self.log_in_state))
+        self.show_password_button.grid(row=1)
         self.check_for_setup_files()
         self.log_in_screen.mainloop()
 
-    def check_state(self):  # Checks the state of self.log_in_state checkbox.
-        state = self.log_in_state.get()
+    def check_state(self, var_name, state_variable):  
+        state = state_variable.get()
         print(state)
         if state == 0:
-            self.password_entry.configure(show='*')
+            var_name.configure(show='*')
         else:
-            self.password_entry.configure(show='')
+            var_name.configure(show='')
 
+    def back_button(self, window_to_destroy): #this is the function that destroys whatever window is specified 
+        window_to_destroy.destroy()
+        self.options_window.deiconify()
+    
     def verify_password(self):  # Verifies the password that the user has entered
         entered_password = self.password_entry.get()
         with open('.cfg', 'rb') as doc:
@@ -64,10 +71,39 @@ class PassKeep:
         full_wipe_button = tk.Button(self.options_window, text='Remove all saved info',
                                      command=self.remove_all_passwords)
         full_wipe_button.grid(row=3)
+        reset_password_button = tk.Button(self.options_window, text='Reset master password', command=self.reset_master_password_gui)
+        reset_password_button.grid(row=4)
         quit_button = tk.Button(self.options_window, text='Quit',
                                 command=self.quit_program)
-        quit_button.grid(row=4)
+        quit_button.grid(row=5)
 
+    def reset_master_password_gui(self): # This is the GUI for resetting the master password
+        reset_password_window = tk.Toplevel()
+        reset_password_window.resizable(height=False, width=False)
+        reset_password_window.title('PassKeep')
+        self.options_window.withdraw()
+        new_password_label = tk.Label(reset_password_window, text='New password:')
+        new_password_label.grid(row=0)
+        new_master_password_entry = tk.Entry(reset_password_window, show='*')
+        new_master_password_entry.grid(row=0, column=1)
+        change_password_button = tk.Button(reset_password_window, text='Set password', command=self.reset_master_password)
+        change_password_button.grid(row=1, column=1)
+        self.chk_box_state = tk.IntVar()
+        show_password_button = tk.Checkbutton(reset_password_window, text='Show password', variable=self.chk_box_state, command=lambda: self.check_state(new_master_password_entry, self.chk_box_state))
+        show_password_button.grid(row=2)
+        back_button = tk.Button(reset_password_window, text='Back', command=lambda: self.back_button(reset_password_window))
+        back_button.grid(row=1)
+
+    def reset_master_password(self): # This is the function that changes the master password
+        os.remove('.cfg') # Removes the file that contains the master password hash
+        new_pass = self.new_password_entry.get()
+        encrypted_password = pbkdf2_sha256.hash(new_pass)
+        with open('.cfg', 'wb') as doc: # Creates the file again and writes the new master password hash to it 
+            pickle.dump(encrypted_password, doc)
+        messagebox.showinfo('Success!', 'You have changed the master password')
+        self.reset_password_window.destroy()
+        self.options_window.deiconify()
+        
     def remove_all_passwords(self):
         with open('.saved', 'r') as doc:
             for line in doc:
@@ -96,44 +132,52 @@ class PassKeep:
 
     def store_new_password_gui(self):  # Stores new account details
         self.options_window.withdraw()
-        self.new_password_window = tk.Toplevel()
-        self.new_password_window.title('PassKeep')
-        self.new_password_window.resizable(height=False, width=False)
+        new_password_window = tk.Toplevel()
+        new_password_window.title('PassKeep')
+        new_password_window.resizable(height=False, width=False)
         # button_frame = tk.Frame(self.new_password_window)
         # button_frame.grid(row=0)
-        account_label = tk.Label(self.new_password_window, text='Account:')
+        account_label = tk.Label(new_password_window, text='Account:')
         account_label.grid(row=0)
-        self.account_entry = tk.Entry(self.new_password_window)
+        self.account_entry = tk.Entry(new_password_window)
         self.account_entry.grid(row=0, column=1)
-        self.username_label = tk.Label(self.new_password_window, text='Username:')
+        self.username_label = tk.Label(new_password_window, text='Username:')
         self.username_label.grid(row=1)
-        self.username_entry = tk.Entry(self.new_password_window)
+        self.username_entry = tk.Entry(new_password_window)
         self.username_entry.grid(row=1, column=1)
-        new_password_label = tk.Label(self.new_password_window, text='Password:')
+        new_password_label = tk.Label(new_password_window, text='Password:')
         new_password_label.grid(row=2)
-        self.new_password_entry = tk.Entry(self.new_password_window, show='*')
+        self.new_password_entry = tk.Entry(new_password_window, show='*')
         self.new_password_entry.grid(row=2, column=1)
-        create_button = tk.Button(self.new_password_window, text='Store details', command=self.store_password)
+        create_button = tk.Button(new_password_window, text='Store details', command=self.store_password)
         create_button.grid(row=3, column=1)
-        back_button = tk.Button(self.new_password_window, text='Back', command=self.store_new_password_back_button)
-        back_button.grid(row=3, column=0)
+        back_button = tk.Button(new_password_window, text='Back', command=lambda: self.back_button(new_password_window))
+        back_button.grid(row=3, column=0, sticky='E')
         self.show_state = tk.IntVar()
-        self.chk_box = tk.Checkbutton(self.new_password_window, text='Show password', variable=self.show_state,
-                                      command=self.check_chk_box)
-        self.chk_box.grid(row=4, column=1)
+        self.chk_box = tk.Checkbutton(new_password_window, text='Show password', variable=self.show_state,
+                                      command=lambda: self.check_state(self.new_password_entry, self.show_state))
+        self.chk_box.grid(row=4, column=0)
+        generate_password_button = tk.Button(new_password_window, text='Generate password', command=self.generate_password)
+        generate_password_button.grid(row=4, column=1)
 
-    def check_chk_box(self):  # Controls the check box located in store_new_passoword_gui()
-        chk_box_state = self.show_state.get()
-        if chk_box_state == 0:
-            self.new_password_entry.configure(show='*')
-        elif chk_box_state == 1:
-            self.new_password_entry.configure(show='')
+    def generate_password(self):
+        alphabet = string.ascii_lowercase
+        numbers = [x for x in range(21)]
+        generated_password = ''
+        print(numbers)
+        for x in range(0, 24):
+            generated_password += random.choice(alphabet)
+            generated_password += str(random.choice(numbers))
 
-    def store_new_password_back_button(self):  # Controls the back button for the 'store_new_password_gui()'
-        self.new_password_window.destroy()
-        self.options_window.deiconify()
+        prompt = messagebox.askyesno('Copy?', 'Do you want to copy the new password to your clipboard?')
+        if prompt == True:
+            pyperclip.copy(generated_password)
+        else:
+            pass
 
-    def store_password(self):  # Stores the password that has been entered in self.new_password_window()
+        self.new_password_entry.insert(0, generated_password)
+
+    def store_password(self): # Stores the password that has been entered in self.new_password_window()
         all_files = os.listdir()
         current_dir = os.getcwd()
         account = '.' + self.account_entry.get().lower()
@@ -185,38 +229,30 @@ class PassKeep:
 
     def read_password_gui(self):  # Setup widgets for the read_password_gui()
         self.options_window.withdraw()
-        self.read_password_window = tk.Toplevel()
-        self.read_password_window.title('PassKeep')
-        self.read_password_window.resizable(height=False, width=False)
-        account_label = tk.Label(self.read_password_window, text='Account:')
+        read_password_window = tk.Toplevel()
+        read_password_window.title('PassKeep')
+        read_password_window.resizable(height=False, width=False)
+        account_label = tk.Label(read_password_window, text='Account:')
         account_label.grid(row=0)
-        self.account_entry = tk.Entry(self.read_password_window)
+        self.account_entry = tk.Entry(read_password_window)
         self.account_entry.grid(row=0, column=1)
-        check_button = tk.Button(self.read_password_window, text='Retrieve', command=self.read_password)
+        check_button = tk.Button(read_password_window, text='Retrieve', command=self.read_password)
         check_button.grid(row=1, column=1)
-        back_button = tk.Button(self.read_password_window, text='Back', command=self.read_password_back_button)
+        back_button = tk.Button(read_password_window, text='Back', command=lambda: self.back_button(read_password_window))
         back_button.grid(row=1)
-
-    def read_password_back_button(self):  # Controls the back button for read_password_gui()
-        self.read_password_window.destroy()
-        self.options_window.deiconify()
 
     def remove_account_gui(self):  # Interface for removing accounts
         self.options_window.withdraw()
-        self.remove_account_window = tk.Toplevel()
-        self.remove_account_window.resizable(height=False, width=False)
-        account_label = tk.Label(self.remove_account_window, text='Account:')
+        remove_account_window = tk.Toplevel()
+        remove_account_window.resizable(height=False, width=False)
+        account_label = tk.Label(remove_account_window, text='Account:')
         account_label.grid(row=0)
-        self.account_entry = tk.Entry(self.remove_account_window)
+        self.account_entry = tk.Entry(remove_account_window)
         self.account_entry.grid(row=0, column=1)
-        delete_button = tk.Button(self.remove_account_window, text='Delete Account', command=self.remove_account)
+        delete_button = tk.Button(remove_account_window, text='Delete Account', command=self.remove_account)
         delete_button.grid(row=1, column=1)
-        back_button = tk.Button(self.remove_account_window, text='Back', command=self.remove_window_back_button)
+        back_button = tk.Button(remove_account_window, text='Back', command=lambda: self.back_button(remove_account_window))
         back_button.grid(row=1)
-
-    def remove_window_back_button(self):  # Back button for remove_window_back_button()
-        self.remove_account_window.destroy()
-        self.options_window.deiconify()
 
     def remove_account(self):  # Removes the account that the user specified in the GUI entry box
         all_files = os.listdir()
@@ -238,9 +274,10 @@ class PassKeep:
                             else:
                                 words.append(word)
 
-                with open('.saved', 'w') as doc:
-                    for item in words:
-                        doc.write(item)
+                doc = open('.saved', 'w')
+                for item in words:
+                    doc.write(item)
+                    doc.write('\n')
                 current_dir = os.getcwd()
                 if account_to_remove in all_files:
                     print('Here')
@@ -330,23 +367,12 @@ class PassKeep:
             create_button.grid(row=1, column=1)
             self.master_state = tk.IntVar()
             self.show_password_chk = tk.Checkbutton(self.new_window, text='Show password', variable=self.master_state,
-                                                    command=self.check_master_state)
+                                                    command=lambda: self.check_state(self.new_password_entry1, self.master_state))
             self.show_password_chk.grid(row=1)
             # self.new_window.grid_columnconfigure(0, weight=0)
             self.new_window.mainloop()
 
-    def check_master_state(self):  # Checks the checkbutton in check_for_setup_files()
-        state = self.master_state.get()
-        print(state)
-        if state == 0:
-            print('Zero')
-            self.new_password_entry1.configure(show='*')
-        else:
-            print('One')
-            self.new_password_entry1.configure(show='')
-
-    def create_master_password(
-            self):  # Prompts user to create master password if '.cfg' is not found in user's current directory.
+    def create_master_password(self):  # Prompts user to create master password if '.cfg' is not found in user's current directory.
         master_password = self.new_password_entry1.get()
         if len(master_password) < 5:
             messagebox.showerror('Error', 'You cannot have a password that has less than 5 characters')
