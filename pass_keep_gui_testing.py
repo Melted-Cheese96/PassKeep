@@ -67,10 +67,44 @@ class PassKeep:
         full_wipe_button = tk.Button(self.options_window, text='Remove all saved info',
                                      command=self.remove_all_passwords)
         full_wipe_button.grid(row=3)
+        reset_password_button = tk.Button(self.options_window, text='Reset master password', command=self.reset_master_password_gui)
+        reset_password_button.grid(row=4)
         quit_button = tk.Button(self.options_window, text='Quit',
                                 command=self.quit_program)
-        quit_button.grid(row=4)
+        quit_button.grid(row=5)
 
+    def reset_master_password_gui(self):
+        self.reset_password_window = tk.Toplevel()
+        self.reset_password_window.resizable(height=False, width=False)
+        self.reset_password_window.title('PassKeep')
+        self.options_window.withdraw()
+        new_password_label = tk.Label(self.reset_password_window, text='New password:')
+        new_password_label.grid(row=0)
+        self.new_password_entry = tk.Entry(self.reset_password_window, show='*')
+        self.new_password_entry.grid(row=0, column=1)
+        change_password_button = tk.Button(self.reset_password_window, text='Set password', command=self.reset_master_password)
+        change_password_button.grid(row=1, column=1)
+        self.check_box_state = tk.IntVar()
+        check_box = tk.Checkbutton(self.reset_password_window, text='Show password', variable=self.check_box_state, command=self.password_show)
+        check_box.grid(row=1)
+
+    def password_show(self):
+        state = self.check_box_state.get()
+        if state == 0:
+            self.new_password_entry.configure(show='*')
+        elif state == 1:
+            self.new_password_entry.configure(show='')
+
+    def reset_master_password(self):
+        os.remove('.cfg')
+        new_pass = self.new_password_entry.get()
+        encrypted_password = pbkdf2_sha256.hash(new_pass)
+        with open('.cfg', 'wb') as doc:
+            pickle.dump(encrypted_password, doc)
+        messagebox.showinfo('Success!', 'You have changed the master password')
+        self.reset_password_window.destroy()
+        self.options_window.deiconify()
+        
     def remove_all_passwords(self):
         with open('.saved', 'r') as doc:
             for line in doc:
@@ -367,8 +401,7 @@ class PassKeep:
             print('One')
             self.new_password_entry1.configure(show='')
 
-    def create_master_password(
-            self):  # Prompts user to create master password if '.cfg' is not found in user's current directory.
+    def create_master_password(self):  # Prompts user to create master password if '.cfg' is not found in user's current directory.
         master_password = self.new_password_entry1.get()
         if len(master_password) < 5:
             messagebox.showerror('Error', 'You cannot have a password that has less than 5 characters')
