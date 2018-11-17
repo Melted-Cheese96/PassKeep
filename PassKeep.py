@@ -7,13 +7,6 @@ import string
 import random
 from cryptography.fernet import Fernet
 
-'''
-TODO LIST
-Encrypt passwords using a fernet key and write the key to that same text file so it can be decoded.
-
-'''
-
-
 def save_pass(user_password, file_name):  # This saves a regular password
     if '.' in file_name:
         pass
