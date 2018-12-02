@@ -174,7 +174,7 @@ class PassKeep:
         all_files = os.listdir()
         current_dir = os.getcwd()
         account = '.' + self.account_entry.get().lower()
-        username = self.username_entry.get().lower()
+        username = self.username_entry.get()
         print(username)
         #if ' ' in username:
          #   username = username.replace(' ', '')
