@@ -16,95 +16,76 @@ class PassKeep:
         self.log_in_screen = tk.Tk()
         self.log_in_screen.title('PassKeep - Log In')
         self.log_in_screen.resizable(height=False, width=False)
+        self.user_handle = tk.Label(text='Username:')
+        self.user_handle.grid(row=0)
+        self.user_handle_entry = tk.Entry()
+        self.user_handle_entry.grid(row=0, column=1)
         self.password_label = tk.Label(text='Password:')
-        self.password_label.grid(row=0)
+        self.password_label.grid(row=1)
         self.password_entry = tk.Entry(show='*')
-        self.password_entry.grid(row=0, column=1)
+        self.password_entry.grid(row=1, column=1)
         self.enter_button = tk.Button(text='Log in', command=self.verify_password)
-        self.enter_button.grid(row=1, column=1)
+        self.enter_button.grid(row=2, column=1)
         self.log_in_state = tk.IntVar()
         self.show_password_check_box_log_in_screen = tk.Checkbutton(text='Show password', variable=self.log_in_state,
-                                                                    command=self.check_state)
-        self.show_password_check_box_log_in_screen.grid(row=1)
+                                                                          command=lambda: self.check_state(self.password_entry, self.log_in_state))
+        self.show_password_check_box_log_in_screen.grid(row=2)
         self.check_for_setup_files()
         self.log_in_screen.mainloop()
 
-    def check_state(self):  # Checks the state of self.log_in_state checkbox.
-        state = self.log_in_state.get()
+    def check_state(self, password_var, state_var):  # Checks the state of self.log_in_state checkbox.
+        state = state_var.get()
         print(state)
         if state == 0:
-            self.password_entry.configure(show='*')
+            password_var.configure(show='*')
         else:
-            self.password_entry.configure(show='')
+            password_var.configure(show='')
 
     def verify_password(self):  # Verifies the password that the user has entered
-        entered_password = self.password_entry.get()
-        with open('.cfg', 'rb') as doc:
-            password_hash = pickle.load(doc)
-
-        verification = pbkdf2_sha256.verify(entered_password, password_hash)
-        if verification:
-            messagebox.showinfo('Success', 'Correct password has been entered!')
-            self.options()
+        starting_dir = os.getcwd()
+        username = self.user_handle_entry.get()
+        password = self.password_entry.get()
+        username = '.' + username
+        print(os.listdir())
+        if username not in os.listdir():
+            messagebox.showerror('User not found', 'User was not found!')
         else:
-            messagebox.showerror('Error', 'You did not enter the correct password')
-            self.password_entry.delete(0, 'end')
+            os.chdir(username)
+            with open('.cfg', 'rb') as password_config_file:
+                p_hash = pickle.load(password_config_file)
+
+            verification = pbkdf2_sha256.verify(password, p_hash)
+            if verification:
+                self.options()
+            else:
+                messagebox.showerror('Wrong password!', 'You have not entered the correct password!')
+                self.password_entry.delete(0, 'end')
+                self.user_handle_entry.delete(0, 'end')
+                os.chdir(starting_dir)
 
     def options(self):  # Main Window
         self.log_in_screen.withdraw()
         self.options_window = tk.Toplevel()
         self.options_window.resizable(height=False, width=False)
         self.options_window.title('PassKeep')
+        logged_in_label = tk.Label(self.options_window, text='Logged in as {}'.format(self.user_handle_entry.get()))
+        logged_in_label.grid(row=0)
         enter_new_password_button = tk.Button(self.options_window, text='Add account',
                                               command=self.store_new_password_gui)
-        enter_new_password_button.grid(row=0)
+        enter_new_password_button.grid(row=1)
         read_password_button = tk.Button(self.options_window, text='Retrieve account details ',
                                          command=self.read_password_gui)
-        read_password_button.grid(row=1)
+        read_password_button.grid(row=2)
         remove_account_button = tk.Button(self.options_window, text='Remove account',
                                           command=self.remove_account_gui)
-        remove_account_button.grid(row=2)
+        remove_account_button.grid(row=3)
         full_wipe_button = tk.Button(self.options_window, text='Remove all saved info',
                                      command=self.remove_all_passwords)
-        full_wipe_button.grid(row=3)
-        reset_password_button = tk.Button(self.options_window, text='Reset master password', command=self.reset_master_password_gui)
-        reset_password_button.grid(row=4)
+        full_wipe_button.grid(row=4)
         quit_button = tk.Button(self.options_window, text='Quit',
                                 command=self.quit_program)
         quit_button.grid(row=5)
 
-    def reset_master_password_gui(self):
-        self.reset_password_window = tk.Toplevel()
-        self.reset_password_window.resizable(height=False, width=False)
-        self.reset_password_window.title('PassKeep')
-        self.options_window.withdraw()
-        new_password_label = tk.Label(self.reset_password_window, text='New password:')
-        new_password_label.grid(row=0)
-        self.new_password_entry = tk.Entry(self.reset_password_window, show='*')
-        self.new_password_entry.grid(row=0, column=1)
-        change_password_button = tk.Button(self.reset_password_window, text='Set password', command=self.reset_master_password)
-        change_password_button.grid(row=1, column=1)
-        self.check_box_state = tk.IntVar()
-        check_box = tk.Checkbutton(self.reset_password_window, text='Show password', variable=self.check_box_state, command=self.password_show)
-        check_box.grid(row=1)
-
-    def password_show(self):
-        state = self.check_box_state.get()
-        if state == 0:
-            self.new_password_entry.configure(show='*')
-        elif state == 1:
-            self.new_password_entry.configure(show='')
-
-    def reset_master_password(self):
-        os.remove('.cfg')
-        new_pass = self.new_password_entry.get()
-        encrypted_password = pbkdf2_sha256.hash(new_pass)
-        with open('.cfg', 'wb') as doc:
-            pickle.dump(encrypted_password, doc)
-        messagebox.showinfo('Success!', 'You have changed the master password')
-        self.reset_password_window.destroy()
-        self.options_window.deiconify()
-        
     def remove_all_passwords(self):
         with open('.saved', 'r') as doc:
             for line in doc:
@@ -353,66 +334,57 @@ class PassKeep:
 
     def check_for_setup_files(self):  # Checks for setup files on startup
         all_files = os.listdir()
-        if '.saved' in all_files:
-            if '.cfg' in all_files:
-                pass
+        if '.users' in all_files:
+            starting_dir = os.getcwd()
+            os.chdir('.users')
+            if len(os.listdir()) == 0:
+                os.chdir(starting_dir)
+                self.new_account_creation()
             else:
-                with open('.saved', 'r') as doc:
-                    for line in doc:
-                        for word in line.split():
-                            try:
-                                os.system('rm -rf {}'.format(word))
-                                # key = '{} key'.format(word)
-                                # os.remove(key)
-                            except FileNotFoundError:
-                                pass
-                os.remove('.saved')
-        else:
-            with open('.saved', 'x') as doc:
                 pass
-
-        if '.cfg' in all_files:
-            pass
         else:
-            self.log_in_screen.withdraw()
-            self.new_window = tk.Toplevel()
-            self.new_window.resizable(height=False, width=False)
-            self.new_window.title('Password creation - PassKeep')
-            new_window_label = tk.Label(self.new_window, text='Create master password!')
-            new_window_label.grid(row=0)
-            self.new_password_entry1 = tk.Entry(self.new_window, show='*')
-            self.new_password_entry1.grid(row=0, column=1)
-            create_button = tk.Button(self.new_window, text='Create', command=self.create_master_password)
-            create_button.grid(row=1, column=1)
-            self.master_state = tk.IntVar()
-            self.show_password_chk = tk.Checkbutton(self.new_window, text='Show password', variable=self.master_state,
-                                                    command=self.check_master_state)
-            self.show_password_chk.grid(row=1)
-            # self.new_window.grid_columnconfigure(0, weight=0)
-            self.new_window.mainloop()
+            os.mkdir('.users')
+            self.new_account_creation()
 
-    def check_master_state(self):  # Checks the checkbutton in check_for_setup_files()
-        state = self.master_state.get()
-        print(state)
-        if state == 0:
-            print('Zero')
-            self.new_password_entry1.configure(show='*')
-        else:
-            print('One')
-            self.new_password_entry1.configure(show='')
+    def new_account_creation(self):
+        self.log_in_screen.withdraw()
+        create_account_window = tk.Toplevel()
+        username_label = tk.Label(create_account_window, text='Username:')
+        username_label.grid(row=0)
+        username_entry = tk.Entry(create_account_window)
+        username_entry.grid(row=0, column=1)
+        password_label = tk.Label(create_account_window, text='New master password:')
+        password_label.grid(row=1)
+        new_master_password_entry = tk.Entry(create_account_window)
+        new_master_password_entry.grid(row=1, column=1)
+        new_master_password_entry.configure(show='*')
+        checkbutton_status = tk.IntVar()
+        show_password_button = tk.Checkbutton(create_account_window, text='Show password', variable=checkbutton_status,
+                                              command=lambda: self.check_state(new_master_password_entry, checkbutton_status))
+        show_password_button.grid(row=2)
+        create_account_button = tk.Button(create_account_window, text='Create account',
+                                          command=lambda: self.create_master_password(new_master_password_entry.get(),
+                                                                                      username_entry.get(), create_account_window))
+        create_account_button.grid(row=2, column=1)
 
-    def create_master_password(self):  # Prompts user to create master password if '.cfg' is not found in user's current directory.
-        master_password = self.new_password_entry1.get()
-        if len(master_password) < 5:
-            messagebox.showerror('Error', 'You cannot have a password that has less than 5 characters')
-        else:
-            master_password_hash = pbkdf2_sha256.hash(master_password)
-            with open('.cfg', 'wb') as doc:
-                pickle.dump(master_password_hash, doc)
-                messagebox.showinfo('Success!',
-                                    'You have created a new master password, make sure that you remember it')
-                self.new_window.destroy()
-                self.log_in_screen.deiconify()
+    def create_master_password(self, password, username, window):
+        # Prompts user to create master password if '.cfg' is not found in user's current directory.
+        if ' ' in username:
+            username = username.replace(' ', '')
+        starting_dir = os.getcwd()
+        os.chdir('.users')
+        username = '.' + username
+        os.mkdir(username)
+        os.chdir(username)
+        password_hash = pbkdf2_sha256.hash(password)
+        with open('.cfg', 'wb') as config_file:
+            pickle.dump(password_hash, config_file)
+        messagebox.showinfo('New Account Created', 'You have created your new account!')
+        window.destroy()
+        print(os.getcwd())
+        os.chdir(starting_dir)
+        os.chdir('.users')
+        self.log_in_screen.deiconify()
 
 
 PassKeep = PassKeep()  # Initializes PassKeep class.
